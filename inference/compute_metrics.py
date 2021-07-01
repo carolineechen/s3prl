@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 import argparse
 import numpy as np
@@ -96,10 +97,28 @@ if (args.predict_dir / "sv").is_dir():
     eer, *other = EER(truth_scores, predict_scores)
     print(f"SV: eer {eer}", file=args.output_file)
 
+# QbE
+if (args.predict_dir / "qbe").is_dir():
+    assert (args.predict_dir / "qbe" / "benchmark.stdlist.xml").is_file()
+    scoring_dir = (args.truth_dir / 'qbe' / 'scoring').absolute()
+    predict_dir = (args.predict_dir / 'qbe').absolute()
+
+    current_dir = os.getcwd()
+    os.chdir(scoring_dir)
+    os.system(f"./score-TWV-Cnxe.sh {predict_dir} groundtruth_quesst14_eval -10")
+    os.chdir(current_dir)
+
+    with open(predict_dir / "score.out", "r") as log:
+        logging = log.read()
+        mtwv = float(re.search("maxTWV: [+-]?([0-9]*[.])?[0-9]+", logging).group().split()[1])
+
+    print(f"QbE: mtwv {mtwv}", file=args.output_file)
+
 # SD
 if (args.predict_dir / "sd").is_dir():
     with tempfile.TemporaryDirectory() as scoring_dir:
-        os.system(f"bash ./inference/truth/sd/score.sh {scoring_dir} {args.predict_dir} | tail -n 1 | awk '{{print $4}}' > {scoring_dir}/result.log")
+        sd_predict_dir = args.predict_dir / "sd"
+        os.system(f"bash ./inference/truth/sd/score.sh {scoring_dir} {sd_predict_dir} | tail -n 1 | awk '{{print $4}}' > {scoring_dir}/result.log")
         with open(f"{scoring_dir}/result.log", "r") as result:
             der = result.readline().strip()
     print(f"SD: der {der}", file=args.output_file)
