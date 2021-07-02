@@ -59,6 +59,26 @@ if (args.predict_dir / "sid").is_dir():
     match = [1 if p == t else 0 for p, t in zip(predict_values, truth_values)]
     print(f"SID: acc {np.array(match).mean()}", file=args.output_file)
 
+# KS
+if (args.predict_dir / "ks").is_dir():
+    predict_file = args.predict_dir / "ks" / "predict.txt"
+    truth_file = args.truth_dir / "ks" / "truth.txt"
+    assert predict_file.is_file()
+    assert truth_file.is_file()
+
+    predict = read_file(predict_file)
+    truth = read_file(truth_file)
+
+    filenames = sorted(predict.keys())
+    predict_values = [predict[filename] for filename in filenames]
+    truth_values = [truth[filename] for filename in filenames]
+    match = [1 if p == t else 0 for p, t in zip(predict_values, truth_values)]
+    print(f"KS: acc {np.array(match).mean()}", file=args.output_file)
+
+# IC
+
+# ER
+
 # ASR
 if (args.predict_dir / "asr").is_dir():
     predict_file = args.predict_dir / "asr" / "predict.ark"
