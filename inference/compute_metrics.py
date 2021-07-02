@@ -43,6 +43,22 @@ if (args.predict_dir / "pr").is_dir():
     from downstream.ctc.metric import wer
     print(f"PR: per {wer(predict_values, truth_values)}", file=args.output_file)
 
+# SID
+if (args.predict_dir / "sid").is_dir():
+    predict_file = args.predict_dir / "sid" / "predict.txt"
+    truth_file = args.truth_dir / "sid" / "truth.txt"
+    assert predict_file.is_file()
+    assert truth_file.is_file()
+
+    predict = read_file(predict_file)
+    truth = read_file(truth_file)
+
+    filenames = sorted(predict.keys())
+    predict_values = [predict[filename] for filename in filenames]
+    truth_values = [truth[filename] for filename in filenames]
+    match = [1 if p == t else 0 for p, t in zip(predict_values, truth_values)]
+    print(f"SID: acc {np.array(match).mean()}", file=args.output_file)
+
 # ASR
 if (args.predict_dir / "asr").is_dir():
     predict_file = args.predict_dir / "asr" / "predict.ark"
@@ -114,13 +130,13 @@ if (args.predict_dir / "qbe").is_dir():
 
     print(f"QbE: mtwv {mtwv}", file=args.output_file)
 
-# SD
-if (args.predict_dir / "sd").is_dir():
-    with tempfile.TemporaryDirectory() as scoring_dir:
-        sd_predict_dir = args.predict_dir / "sd"
-        os.system(f"bash ./inference/truth/sd/score.sh {scoring_dir} {sd_predict_dir} | tail -n 1 | awk '{{print $4}}' > {scoring_dir}/result.log")
-        with open(f"{scoring_dir}/result.log", "r") as result:
-            der = result.readline().strip()
-    print(f"SD: der {der}", file=args.output_file)
+# # SD
+# if (args.predict_dir / "sd").is_dir():
+#     with tempfile.TemporaryDirectory() as scoring_dir:
+#         sd_predict_dir = args.predict_dir / "sd"
+#         os.system(f"bash ./inference/truth/sd/score.sh {scoring_dir} {sd_predict_dir} | tail -n 1 | awk '{{print $4}}' > {scoring_dir}/result.log")
+#         with open(f"{scoring_dir}/result.log", "r") as result:
+#             der = result.readline().strip()
+#     print(f"SD: der {der}", file=args.output_file)
 
-args.output_file.close()
+# args.output_file.close()
