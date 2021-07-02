@@ -17,12 +17,12 @@ args.output_file = open(args.output_file, "w")
 assert args.predict_dir.is_dir()
 assert args.truth_dir.is_dir()
 
-def read_file(path, callback=lambda x: x):
+def read_file(path, callback=lambda x: x, sep=" "):
     content = {}
     with open(path, "r") as file:
         lines = file.readlines()
         for line in lines:
-            filename, value = line.strip().split(maxsplit=1)
+            filename, value = line.strip().split(sep, maxsplit=1)
             content[filename] = callback(value)
     return content
 
@@ -76,6 +76,20 @@ if (args.predict_dir / "ks").is_dir():
     print(f"KS: acc {np.array(match).mean()}", file=args.output_file)
 
 # IC
+if (args.predict_dir / "ic").is_dir():
+    predict_file = args.predict_dir / "ic" / "predict.csv"
+    truth_file = args.truth_dir / "ic" / "truth.csv"
+    assert predict_file.is_file()
+    assert truth_file.is_file()
+
+    predict = read_file(predict_file, lambda x: x.split(","), ",")
+    truth = read_file(truth_file, lambda x: x.split(","), ",")
+
+    filenames = sorted(predict.keys())
+    predict_values = [predict[filename] for filename in filenames]
+    truth_values = [truth[filename] for filename in filenames]
+    match = [1 if p == t else 0 for p, t in zip(predict_values, truth_values)]
+    print(f"KS: acc {np.array(match).mean()}", file=args.output_file)
 
 # ER
 
